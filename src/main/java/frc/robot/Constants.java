@@ -17,5 +17,8 @@ public final class Constants {
     public static final MomentOfInertia WRIST_MOI = KilogramSquareMeters.of(0.3175242664);
     public static final double WRIST_GEAR_RATIO = 35;
     public static final Angle WRIST_ZERO_OFFSET = Revolutions.of(0.8164931);
+    
+    //public static final HowdyPID WRIST_PID = new HowdyPID(0.03, 0, 0);
+    //public static final HowdyFF WRIST_FF = new HowdyFF(0, 0.54, 4.28, 0.05);
   }
 }
