@@ -7,7 +7,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.*;
 
-import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.*;
@@ -33,7 +32,6 @@ public class ArmSubSys extends SubsystemBase {
 
   // Simulation
   private SparkMaxSim simWristMotor;
-  private SparkAbsoluteEncoderSim simWristEncoder;
   private SingleJointedArmSim simWrist;
   private Mechanism2d mech;
   private MechanismLigament2d wristMech;
@@ -51,9 +49,6 @@ public class ArmSubSys extends SubsystemBase {
 
     if (Robot.isSimulation()) {
       simWristMotor = new SparkMaxSim(wristMotor, gearbox);
-      simWristEncoder = simWristMotor.getAbsoluteEncoderSim();
-      simWristEncoder.setPosition(0);
-      simWristEncoder.setVelocity(0);
 
       simWrist =
           new SingleJointedArmSim(
