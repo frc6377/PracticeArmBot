@@ -15,6 +15,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -33,16 +34,18 @@ public class ArmSubSys extends SubsystemBase {
   // Simulation
   private SparkMaxSim simWristMotor;
   private SingleJointedArmSim simWrist;
-  private Mechanism2d mech;
+  private static Mechanism2d mech = new Mechanism2d(10, 10);
+  private static ComplexWidget widg;
   private MechanismLigament2d wristMech;
 
-  private final Time sparkPeriod = Millisecond.one();
-  private final DCMotor gearbox = DCMotor.getNEO(1);
-  private final Angle mechOffset = Degrees.of(-90);
+  private final Time sparkPeriod;
+  private static final DCMotor gearbox = DCMotor.getNEO(1);
+  private static final Angle mechOffset = Degrees.of(-90);
 
   /** Creates a new ArmSubSys. */
-  public ArmSubSys() {
-    wristMotor = new SparkMax(Constants.Arm.WRIST_MOTOR_ID, MotorType.kBrushless);
+  public ArmSubSys(int id) {
+    sparkPeriod = id == Arm.WRIST_MOTOR_ID ? Millisecond.one() : Robot.period;
+    wristMotor = new SparkMax(id, MotorType.kBrushless);
     wristEncoder = wristMotor.getAbsoluteEncoder();
     wristMotor.configure(
         Constants.Arm.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -61,25 +64,30 @@ public class ArmSubSys extends SubsystemBase {
               true,
               mechOffset.in(Radians));
 
-      mech = new Mechanism2d(10, 10);
       wristMech =
           mech.getRoot("root", 5, 5)
               .append(
                   new MechanismLigament2d(
-                      "Wrist Mech",
+                      "Wrist Mech [" + id + "]",
                       Constants.Arm.WRIST_LENGTH.times(10).in(Meters),
                       0,
                       10,
-                      new Color8Bit(Color.kRed)));
+                      new Color8Bit(id == Arm.WRIST_MOTOR_ID ? Color.kRed : Color.kGreen)));
 
-      Shuffleboard.getTab(getName()).add("Arm", mech);
+      if (widg == null) {
+        widg = Shuffleboard.getTab(getName()).add("Arm", mech);
+      }
 
       // TODO Hack used because SparkSim iterate()
       // doesn't ever set the "Control Mode" SimInteger
       // Remove once this is fixed in REVLib
-      SimDeviceSim simDev = new SimDeviceSim("SPARK MAX [" + Arm.WRIST_MOTOR_ID + "]");
+      SimDeviceSim simDev = new SimDeviceSim("SPARK MAX [" + id + "]");
       simDev.getInt("Control Mode").set(ControlType.kPosition.value);
     }
+  }
+
+  public ArmSubSys() {
+    this(Arm.WRIST_MOTOR_ID);
   }
 
   public Command gotoAngle(Angle a) {
