@@ -200,4 +200,5 @@ test {
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 }
 
-compileJava.dependsOn("spotlessApply")
+spotlessApply.dependsOn("compileJava")
+compileJava.finalizedBy("spotlessApply")
