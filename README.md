@@ -1,2 +1,1 @@
-# Inspirational Quote
--all your dreams can come true
+"all your dreams can come true"
