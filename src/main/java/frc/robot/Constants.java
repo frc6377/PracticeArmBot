@@ -6,7 +6,7 @@ import edu.wpi.first.units.measure.*;
 
 public final class Constants {
 
-  public static class Arm {
+  public static class ArmConstants {
     // Wrist
     public static final int WRIST_MOTOR_ID = 12;
     public static final int WRIST_ENCODER_ID = 25;
