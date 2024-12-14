@@ -25,7 +25,7 @@ public class RobotContainer {
 
   private void configureBindings() {
     if (Robot.isSimulation()) {
-      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(1.0));
+      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(12.0));
       m_driverController.button(2).whileTrue(m_ArmSubsystem.setAngleCommand(Degrees.of(90.0)));
     }
   }

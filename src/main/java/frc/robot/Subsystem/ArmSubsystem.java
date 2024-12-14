@@ -28,8 +28,9 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -51,10 +52,10 @@ public class ArmSubsystem extends SubsystemBase {
   private SingleJointedArmSim armSim;
   private Mechanism2d armMech;
   private MechanismLigament2d armMechLig;
+  private static ComplexWidget widg;
 
   private final Time sparkPeriod;
-
-  private ShuffleboardTab armTab = Shuffleboard.getTab("ArmSubsystem");
+  private static final DCMotor gearbox = DCMotor.getNEO(1);
 
   /** Creates a new ArmSubsystem. */
   public ArmSubsystem(int id) {
@@ -64,14 +65,13 @@ public class ArmSubsystem extends SubsystemBase {
     encoder = motor.getAbsoluteEncoder();
     motor.configure(
         ArmConstants.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-    motor.getClosedLoopController().setReference(0, ControlType.kPosition);
 
     if (Robot.isSimulation()) {
-      motorSim = new SparkMaxSim(motor, DCMotor.getNEO(1));
+      motorSim = new SparkMaxSim(motor, gearbox);
 
       armSim =
           new SingleJointedArmSim(
-              DCMotor.getNEO(1),
+              gearbox,
               ArmConstants.WRIST_GEAR_RATIO,
               ArmConstants.WRIST_MOI.in(KilogramSquareMeters),
               ArmConstants.WRIST_LENGTH.in(Meters),
@@ -92,7 +92,15 @@ public class ArmSubsystem extends SubsystemBase {
                       10,
                       new Color8Bit(id == ArmConstants.WRIST_MOTOR_ID ? Color.kBlue : Color.kRed)));
 
-      armTab.add("Arm Mech", armMech);
+      if (widg == null) {
+        widg = Shuffleboard.getTab(getName()).add("Arm", armMech);
+      }
+
+      // TODO Hack used because SparkSim iterate()
+      // doesn't ever set the "Control Mode" SimInteger
+      // Remove once this is fixed in REVLib
+      SimDeviceSim simDev = new SimDeviceSim("SPARK MAX [" + id + "]");
+      simDev.getInt("Control Mode").set(ControlType.kPosition.value);
     }
   }
 
@@ -132,11 +140,7 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Current Angle (Deg)", getArmPose().in(Degrees));
-    SmartDashboard.putNumber("Motor 1 output", motor.getAppliedOutput());
-  }
+  public void periodic() {}
 
   @Override
   public void simulationPeriodic() {
@@ -155,10 +159,16 @@ public class ArmSubsystem extends SubsystemBase {
     }
     armMechLig.setAngle(simPos.in(Degrees));
 
+    SmartDashboard.putNumber("Bus Voltage", motorSim.getBusVoltage());
+    SmartDashboard.putNumber("Applied Output", motorSim.getAppliedOutput());
+    SmartDashboard.putNumber("sparkPeriod", sparkPeriod.in(Seconds));
+    SmartDashboard.putNumber(
+        "ArmSim Input", motorSim.getAppliedOutput() * motorSim.getBusVoltage());
+
     SmartDashboard.putNumber("motorSim Output", motorSim.getAppliedOutput());
 
-    SmartDashboard.putNumber("Mech Sim Pose (Deg)", armMechLig.getAngle());
-    SmartDashboard.putNumber("simVel", simVel.in(RadiansPerSecond));
+    SmartDashboard.putNumber("simVel", simVel.in(RPM));
+
     SmartDashboard.putNumber("simPos", simPos.in(Degrees));
   }
 }
