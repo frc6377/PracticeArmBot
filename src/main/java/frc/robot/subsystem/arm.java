@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Arm;
+import frc.robot.utilities.DebugEntry;
 import frc.robot.Robot;
 
 public class arm extends SubsystemBase {
@@ -39,14 +40,14 @@ public class arm extends SubsystemBase {
   private final MechanismRoot2d ArmPivotRootMech;
   private final MechanismLigament2d ArmTowerMech;
   private final MechanismLigament2d ArmMech;
-  private Angle TargetAngleSim;
+  private DebugEntry<Angle> TargetAngleSim;
   private final PIDController pivotPidSim;
   /** Creates a new arm. */
   public arm() {
     PivotMotor = new SparkMax(Arm.WRIST_MOTOR_ID, MotorType.kBrushless);
     PivotEncoder = PivotMotor.getAbsoluteEncoder();
     PivotPid = new PIDController(Arm.kP, Arm.kI, Arm.kD);
-    TargetAngleSim = Arm.WRIST_MIN_ANGLE;
+    TargetAngleSim=new DebugEntry<Angle>(Arm.WRIST_MIN_ANGLE,"Target angle",this);
     // sim stuff
     PivotMotorSim = new SparkMaxSim(PivotMotor, pivotGearbox);
     PivotEncoderSim = PivotMotorSim.getAbsoluteEncoderSim();
@@ -95,7 +96,7 @@ public class arm extends SubsystemBase {
     armSim.setInput(PivotMotorSim.getAppliedOutput() * RobotController.getBatteryVoltage());
     armSim.update(0.020);
     PivotEncoderSim.setPosition(armSim.getAngleRads());
-    PivotMotorSim.setVelocity(pivotPidSim.calculate(PivotEncoderSim.getPosition(),TargetAngleSim.in(Radians)));
+    PivotMotorSim.setVelocity(pivotPidSim.calculate(PivotEncoderSim.getPosition(),TargetAngleSim.get().in(Radians)));
     ArmMech.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
     SmartDashboard.putData("Arm sim", Mech);
     SmartDashboard.putNumber("Angle", Units.radiansToDegrees(armSim.getAngleRads()));
