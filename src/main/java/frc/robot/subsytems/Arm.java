@@ -7,17 +7,24 @@ package frc.robot.subsytems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
-import edu.wpi.first.units.Units;
+import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.config.ClosedLoopConfig;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import frc.robot.Constants;
 
 
 public class Arm extends SubsystemBase {
   /** Creates a new Arm. */
   private SparkMax motor;
   private SparkAbsoluteEncoder encoder;
+  private SparkMaxConfig motorConfig;
+  private SparkClosedLoopController closedLoop;
 
   public Arm() {
     motor = new SparkMax(12, null);
     encoder = motor.getAbsoluteEncoder();
+    closedLoop = motor.getClosedLoopController();
   }
 
   @Override
@@ -26,8 +33,11 @@ public class Arm extends SubsystemBase {
   }
 
   void gotoAngle(double angle) {
-    motor.
+    closedLoop.setReference(angle, )
   }
 
+  void stop() {
+    motor.stopMotor();
+  }
   
 }
