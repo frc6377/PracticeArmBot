@@ -47,7 +47,7 @@ public class arm extends SubsystemBase {
     PivotMotor = new SparkMax(Arm.WRIST_MOTOR_ID, MotorType.kBrushless);
     PivotEncoder = PivotMotor.getAbsoluteEncoder();
     PivotPid = new PIDController(Arm.kP, Arm.kI, Arm.kD);
-    TargetAngleSim=new DebugEntry<Double>(Arm.WRIST_MIN_ANGLE.in(Degree),"Target angle",this);
+    TargetAngleSim = new DebugEntry<Double>(Arm.WRIST_MIN_ANGLE.in(Degree), "Target angle", this);
     // sim stuff
     PivotMotorSim = new SparkMaxSim(PivotMotor, pivotGearbox);
     PivotEncoderSim = PivotMotorSim.getAbsoluteEncoderSim();
@@ -96,7 +96,9 @@ public class arm extends SubsystemBase {
     armSim.setInput(PivotMotorSim.getAppliedOutput() * RobotController.getBatteryVoltage());
     armSim.update(0.020);
     PivotEncoderSim.setPosition(armSim.getAngleRads());
-    PivotMotorSim.setVelocity(pivotPidSim.calculate(PivotEncoderSim.getPosition(),TargetAngleSim.get().in(Radians)));
+    PivotMotorSim.setVelocity(
+        pivotPidSim.calculate(
+            PivotEncoderSim.getPosition(), Units.degreesToRadians(TargetAngleSim.get())));
     ArmMech.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
     SmartDashboard.putData("Arm sim", Mech);
     SmartDashboard.putNumber("Angle", Units.radiansToDegrees(armSim.getAngleRads()));
