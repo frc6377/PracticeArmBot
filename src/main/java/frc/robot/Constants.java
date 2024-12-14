@@ -6,6 +6,8 @@ import edu.wpi.first.units.measure.*;
 
 public final class Constants {
 
+  public static final int DRIVER_CONTROLLER_PORT = 1;
+
   public static class Arm {
     // Wrist
     public static final int WRIST_MOTOR_ID = 12;
