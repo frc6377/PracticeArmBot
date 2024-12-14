@@ -23,8 +23,8 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.Constants.Arm;
+import frc.robot.Robot;
 
 public class arm extends SubsystemBase {
   private final SparkMax PivotMotor;
@@ -43,8 +43,8 @@ public class arm extends SubsystemBase {
   public arm() {
     PivotMotor = new SparkMax(Arm.WRIST_MOTOR_ID, MotorType.kBrushless);
     PivotEncoder = PivotMotor.getAbsoluteEncoder();
-    PivotPid = new PIDController(Arm.kP, Arm.kI, Arm.kD);    
-    
+    PivotPid = new PIDController(Arm.kP, Arm.kI, Arm.kD);
+
     // sim stuff
     PivotMotorSim = new SparkMaxSim(PivotMotor, pivotGearbox);
     PivotEncoderSim = PivotMotorSim.getAbsoluteEncoderSim();
@@ -62,10 +62,12 @@ public class arm extends SubsystemBase {
             1);
     Mech = new Mechanism2d(60, 60);
     ArmPivotRootMech = Mech.getRoot("ArmPivot", 30, 30);
-    ArmTowerMech = ArmPivotRootMech.append(new MechanismLigament2d("ArmTower",30,-90));
-    ArmMech = ArmPivotRootMech.append(new MechanismLigament2d("Arm",30,Units.radiansToDegrees(armSim.getAngleRads())));
+    ArmTowerMech = ArmPivotRootMech.append(new MechanismLigament2d("ArmTower", 30, -90));
+    ArmMech =
+        ArmPivotRootMech.append(
+            new MechanismLigament2d("Arm", 30, Units.radiansToDegrees(armSim.getAngleRads())));
 
-    SmartDashboard.putData("Arm sim",Mech);
+    SmartDashboard.putData("Arm sim", Mech);
   }
 
   public Command GoToAngle(Angle angle) {
@@ -85,21 +87,22 @@ public class arm extends SubsystemBase {
   private void Update() {
     PivotMotor.set(PivotPid.calculate(PivotEncoder.getPosition(), TargetAngle));
   }
-  private void UpdateSim(){
-    armSim.setInput(PivotMotorSim.getAppliedOutput()*RobotController.getBatteryVoltage());
+
+  private void UpdateSim() {
+    armSim.setInput(PivotMotorSim.getAppliedOutput() * RobotController.getBatteryVoltage());
     armSim.update(0.020);
     PivotEncoderSim.setPosition(armSim.getAngleRads());
     ArmMech.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
-
+    SmartDashboard.putData("Arm sim", Mech);
+    SmartDashboard.putNumber("Angle",Units.radiansToDegrees(armSim.getAngleRads()));
   }
+
   @Override
   public void periodic() {
-    if(Robot.isReal()){
+    if (Robot.isReal()) {
       Update();
-    } else{
+    } else {
       UpdateSim();
     }
-
   }
-
 }
