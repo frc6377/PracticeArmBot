@@ -94,7 +94,7 @@ public class arm extends SubsystemBase {
     PivotEncoderSim.setPosition(armSim.getAngleRads());
     ArmMech.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
     SmartDashboard.putData("Arm sim", Mech);
-    SmartDashboard.putNumber("Angle",Units.radiansToDegrees(armSim.getAngleRads()));
+    SmartDashboard.putNumber("Angle", Units.radiansToDegrees(armSim.getAngleRads()));
   }
 
   @Override
