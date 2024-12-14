@@ -5,6 +5,7 @@
 package frc.robot.Subsystem;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.RPM;
@@ -33,7 +34,6 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -52,10 +52,8 @@ public class ArmSubsystem extends SubsystemBase {
   // Simulation Things
   private SparkMaxSim motorSim;
   private SingleJointedArmSim armSim;
-  private Mechanism2d armMechanism2d;
-  private MechanismRoot2d root;
-  private MechanismLigament2d baseArm;
-  private MechanismLigament2d scoringMech;
+  private Mechanism2d armMech;
+  private MechanismLigament2d armMechLig;
 
   private final Time sparkPeriod;
 
@@ -89,27 +87,27 @@ public class ArmSubsystem extends SubsystemBase {
           new SingleJointedArmSim(
               DCMotor.getNEO(1),
               ArmConstants.WRIST_GEAR_RATIO,
-              ArmConstants.WRIST_MOI.magnitude(),
+              ArmConstants.WRIST_MOI.in(KilogramSquareMeters),
               ArmConstants.WRIST_LENGTH.in(Meters),
               ArmConstants.WRIST_MIN_ANGLE.in(Radians),
               ArmConstants.WRIST_MAX_ANGLE.in(Radians),
               true,
               ArmConstants.WRIST_ZERO_OFFSET.in(Radians));
 
-      armMechanism2d = new Mechanism2d(1, 1);
-      root = armMechanism2d.getRoot("Root", 0.5, 0);
-      baseArm =
-          root.append(new MechanismLigament2d("Base Elv", 0.5, 0, 15, new Color8Bit(Color.kBlue)));
-      scoringMech =
-          baseArm.append(
-              new MechanismLigament2d(
-                  "Scoring Elv",
-                  ArmConstants.WRIST_LENGTH.in(Meters),
-                  0,
-                  10,
-                  new Color8Bit(Color.kAqua)));
+      armMech = new Mechanism2d(10, 10);
+      armMechLig =
+          armMech
+              .getRoot("root", 5, 5)
+              .append(
+                  new MechanismLigament2d(
+                      "Wrist Mech [" + id + "]",
+                      ArmConstants.WRIST_LENGTH.times(10).in(Meters),
+                      0,
+                      10,
+                      new Color8Bit(
+                          id == ArmConstants.WRIST_MOTOR_ID ? Color.kRed : Color.kGreen)));
 
-      armTab.add("Arm Mech", armMechanism2d);
+      armTab.add("Arm Mech", armMech);
     }
   }
 
@@ -129,20 +127,15 @@ public class ArmSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Target Pose (Deg)", angleDeg);
   }
 
-  private void setPercent(Double percentPower) {
-    motor.set(percentPower);
-  }
-
-  private void stop() {
-    motor.set(0.0);
-  }
-
   public Command setAngleCommand(Double angleDeg) {
-    return Commands.runEnd(() -> gotoAngle(angleDeg), () -> stop());
+    return Commands.run(() -> gotoAngle(angleDeg));
   }
 
   public Command setPercentCommand(Double percentPower) {
-    return Commands.runEnd(() -> setPercent(percentPower), () -> stop());
+    return Commands.run(
+        () -> {
+          motor.set(percentPower);
+        });
   }
 
   public Command stopCommand() {
@@ -153,7 +146,7 @@ public class ArmSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Current Angle (Deg)", getArmPose().in(Degrees));
-    SmartDashboard.putNumber("Motor 1 output", motor.get() * RobotController.getBatteryVoltage());
+    SmartDashboard.putNumber("Motor 1 output", motor.get());
   }
 
   @Override
@@ -170,10 +163,12 @@ public class ArmSubsystem extends SubsystemBase {
 
       motorSim.iterate(
           simVel.in(RPM), RobotController.getBatteryVoltage(), sparkPeriod.in(Seconds));
-      scoringMech.setAngle(simPos.in(Degrees));
     }
+    armMechLig.setAngle(simPos.in(Degrees));
 
     SmartDashboard.putNumber("Sim Arm Pose (Rads)", armSim.getAngleRads());
-    SmartDashboard.putNumber("Mech Sim Pose (Deg)", scoringMech.getAngle());
+    SmartDashboard.putNumber("Mech Sim Pose (Deg)", armMechLig.getAngle());
+    SmartDashboard.putNumber("simVel", simVel.in(RadiansPerSecond));
+    SmartDashboard.putNumber("simPos", simPos.in(Degrees));
   }
 }

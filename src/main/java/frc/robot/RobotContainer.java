@@ -16,14 +16,15 @@ public class RobotContainer {
   private final CommandXboxController m_driverController = new CommandXboxController(0);
 
   public RobotContainer() {
-    m_ArmSubsystem = new ArmSubsystem(1);
+    m_ArmSubsystem = new ArmSubsystem();
 
     configureBindings();
   }
 
   private void configureBindings() {
     if (Robot.isSimulation()) {
-      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(1.0));
+      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(0.7));
+      m_driverController.button(2).whileTrue(m_ArmSubsystem.setAngleCommand(90.0));
     }
   }
 
