@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -23,8 +25,8 @@ public class RobotContainer {
 
   private void configureBindings() {
     if (Robot.isSimulation()) {
-      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(0.7));
-      m_driverController.button(2).whileTrue(m_ArmSubsystem.setAngleCommand(90.0));
+      m_driverController.button(1).whileTrue(m_ArmSubsystem.setPercentCommand(1.0));
+      m_driverController.button(2).whileTrue(m_ArmSubsystem.setAngleCommand(Degrees.of(90.0)));
     }
   }
 

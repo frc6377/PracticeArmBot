@@ -13,21 +13,20 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -45,8 +44,6 @@ import frc.robot.Robot;
 
 public class ArmSubsystem extends SubsystemBase {
   private final SparkMax motor;
-  private final SparkMaxConfig motorConfig;
-  private final SparkClosedLoopController closedLoopController;
   private final SparkAbsoluteEncoder encoder;
 
   // Simulation Things
@@ -64,21 +61,10 @@ public class ArmSubsystem extends SubsystemBase {
     sparkPeriod = id == ArmConstants.WRIST_MOTOR_ID ? Milliseconds.one() : Robot.period;
 
     motor = new SparkMax(ArmConstants.WRIST_MOTOR_ID, MotorType.kBrushless);
-    closedLoopController = motor.getClosedLoopController();
-
-    motorConfig = new SparkMaxConfig();
-
     encoder = motor.getAbsoluteEncoder();
-
-    motorConfig
-        .closedLoop
-        .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-        .p(1.0)
-        .i(0.0)
-        .d(0.0)
-        .outputRange(-1, 1);
-
-    motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    motor.configure(
+        ArmConstants.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    motor.getClosedLoopController().setReference(0, ControlType.kPosition);
 
     if (Robot.isSimulation()) {
       motorSim = new SparkMaxSim(motor, DCMotor.getNEO(1));
@@ -104,8 +90,7 @@ public class ArmSubsystem extends SubsystemBase {
                       ArmConstants.WRIST_LENGTH.times(10).in(Meters),
                       0,
                       10,
-                      new Color8Bit(
-                          id == ArmConstants.WRIST_MOTOR_ID ? Color.kRed : Color.kGreen)));
+                      new Color8Bit(id == ArmConstants.WRIST_MOTOR_ID ? Color.kBlue : Color.kRed)));
 
       armTab.add("Arm Mech", armMech);
     }
@@ -122,20 +107,24 @@ public class ArmSubsystem extends SubsystemBase {
     return Radians.of(armSim.getAngleRads());
   }
 
-  private void gotoAngle(Double angleDeg) {
-    closedLoopController.setReference(angleDeg, ControlType.kPosition);
-    SmartDashboard.putNumber("Target Pose (Deg)", angleDeg);
-  }
-
-  public Command setAngleCommand(Double angleDeg) {
-    return Commands.run(() -> gotoAngle(angleDeg));
+  public Command setAngleCommand(Angle angleDeg) {
+    return Commands.run(
+        () -> {
+          Voltage newFF =
+              ArmConstants.FF.calculate(
+                  Rotations.of(encoder.getPosition()), RPM.of(encoder.getVelocity()), RPM.zero());
+          motor
+              .getClosedLoopController()
+              .setReference(angleDeg.in(Rotations), ControlType.kPosition, 0, newFF.in(Volts));
+        });
   }
 
   public Command setPercentCommand(Double percentPower) {
-    return Commands.run(
+    return Commands.runEnd(
         () -> {
-          motor.set(percentPower);
-        });
+          motor.getClosedLoopController().setReference(percentPower, ControlType.kVoltage);
+        },
+        motor::stopMotor);
   }
 
   public Command stopCommand() {
@@ -146,7 +135,7 @@ public class ArmSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Current Angle (Deg)", getArmPose().in(Degrees));
-    SmartDashboard.putNumber("Motor 1 output", motor.get());
+    SmartDashboard.putNumber("Motor 1 output", motor.getAppliedOutput());
   }
 
   @Override
@@ -166,7 +155,8 @@ public class ArmSubsystem extends SubsystemBase {
     }
     armMechLig.setAngle(simPos.in(Degrees));
 
-    SmartDashboard.putNumber("Sim Arm Pose (Rads)", armSim.getAngleRads());
+    SmartDashboard.putNumber("motorSim Output", motorSim.getAppliedOutput());
+
     SmartDashboard.putNumber("Mech Sim Pose (Deg)", armMechLig.getAngle());
     SmartDashboard.putNumber("simVel", simVel.in(RadiansPerSecond));
     SmartDashboard.putNumber("simPos", simPos.in(Degrees));
