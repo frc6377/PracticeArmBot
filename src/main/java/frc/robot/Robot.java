@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LoggedRobot;
 
 public class Robot extends LoggedRobot {
-
+  public static final boolean isCompetition = false;
   public static final Time period = Seconds.of(Robot.defaultPeriodSecs);
   private Command m_autonomousCommand;
 
