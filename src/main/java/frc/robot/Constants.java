@@ -12,6 +12,10 @@ import edu.wpi.first.units.measure.*;
 public final class Constants {
   public static final boolean isReplayMode = false;
 
+  public static class DriveConstants {
+    public static final double DRIVE_SPEED = 0.1;
+  }
+
   public static class ArmConstants {
     // Wrist
     public static final int WRIST_MOTOR_ID = 12;

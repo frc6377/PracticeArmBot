@@ -14,8 +14,8 @@ import frc.robot.Subsystem.ArmSubsystem;
 import frc.robot.Subsystem.DriveSubsystem;
 
 public class RobotContainer {
-  private ArmSubsystem m_ArmSubsystem;
-  private DriveSubsystem m_DriveSubsystem;
+  private final ArmSubsystem m_ArmSubsystem;
+  private final DriveSubsystem m_DriveSubsystem;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController = new CommandXboxController(0);
@@ -24,12 +24,19 @@ public class RobotContainer {
     m_ArmSubsystem = new ArmSubsystem();
     m_DriveSubsystem = new DriveSubsystem();
 
+    // Drive Controlls
+    m_DriveSubsystem.setDefaultCommand(
+        m_DriveSubsystem.DriveCommand(
+            m_driverController::getLeftX,
+            m_driverController::getLeftY,
+            m_driverController::getRightX));
+
     configureBindings();
   }
 
   private void configureBindings() {
-    if (Robot.isSimulation()) {
 
+    if (Robot.isSimulation()) {
       // Arm Controlls
       m_driverController
           .button(1)

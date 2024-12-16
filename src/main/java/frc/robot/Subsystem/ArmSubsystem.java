@@ -62,7 +62,7 @@ public class ArmSubsystem extends SubsystemBase {
   private final Time sparkPeriod;
   private static final DCMotor gearbox = DCMotor.getNEO(1);
 
-  private Pose3d compPose1 = new Pose3d(0.0, 0.0, 0.15, new Rotation3d());
+  private Pose3d compPose1 = new Pose3d(0.0, 0.0, 0.1, new Rotation3d());
   private Pose3d compPose2 = new Pose3d();
   private StructPublisher<Pose3d> publisher1 =
       NetworkTableInstance.getDefault().getStructTopic("compPose1", Pose3d.struct).publish();
