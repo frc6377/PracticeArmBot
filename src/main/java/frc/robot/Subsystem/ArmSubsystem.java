@@ -22,7 +22,11 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
@@ -51,11 +55,19 @@ public class ArmSubsystem extends SubsystemBase {
   private SparkMaxSim motorSim;
   private SingleJointedArmSim armSim;
   private Mechanism2d armMech;
+  private MechanismLigament2d armBaseMech;
   private MechanismLigament2d armMechLig;
   private static ComplexWidget widg;
 
   private final Time sparkPeriod;
   private static final DCMotor gearbox = DCMotor.getNEO(1);
+
+  private Pose3d compPose1 = new Pose3d(0.0, 0.0, 0.15, new Rotation3d());
+  private Pose3d compPose2 = new Pose3d();
+  private StructPublisher<Pose3d> publisher1 =
+      NetworkTableInstance.getDefault().getStructTopic("compPose1", Pose3d.struct).publish();
+  private StructPublisher<Pose3d> publisher2 =
+      NetworkTableInstance.getDefault().getStructTopic("compPose2", Pose3d.struct).publish();
 
   /** Creates a new ArmSubsystem. */
   public ArmSubsystem(int id) {
@@ -80,17 +92,26 @@ public class ArmSubsystem extends SubsystemBase {
               true,
               ArmConstants.WRIST_ZERO_OFFSET.in(Radians));
 
-      armMech = new Mechanism2d(10, 10);
-      armMechLig =
+      armMech = new Mechanism2d(1, 1);
+      armBaseMech =
           armMech
-              .getRoot("root", 5, 5)
+              .getRoot("root", 0, 0)
               .append(
                   new MechanismLigament2d(
-                      "Wrist Mech [" + id + "]",
-                      ArmConstants.WRIST_LENGTH.times(10).in(Meters),
-                      0,
-                      10,
-                      new Color8Bit(id == ArmConstants.WRIST_MOTOR_ID ? Color.kBlue : Color.kRed)));
+                      "Base",
+                      0.5,
+                      90,
+                      15,
+                      new Color8Bit(
+                          id == ArmConstants.WRIST_MOTOR_ID ? Color.kPurple : Color.kDarkRed)));
+      armMechLig =
+          armBaseMech.append(
+              new MechanismLigament2d(
+                  "Wrist Mech [" + id + "]",
+                  ArmConstants.WRIST_LENGTH.in(Meters),
+                  0,
+                  10,
+                  new Color8Bit(id == ArmConstants.WRIST_MOTOR_ID ? Color.kBlue : Color.kRed)));
 
       if (widg == null) {
         widg = Shuffleboard.getTab(getName()).add("Arm", armMech);
@@ -140,7 +161,11 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    SmartDashboard.putNumber("Arm Pose", getArmPose().in(Degrees));
+    publisher1.set(compPose1);
+    publisher2.set(compPose2);
+  }
 
   @Override
   public void simulationPeriodic() {
@@ -157,18 +182,18 @@ public class ArmSubsystem extends SubsystemBase {
       motorSim.iterate(
           simVel.in(RPM), RobotController.getBatteryVoltage(), sparkPeriod.in(Seconds));
     }
-    armMechLig.setAngle(simPos.in(Degrees));
+    armMechLig.setAngle(simPos.minus(Degrees.of(90)).in(Degrees));
+    compPose2 =
+        new Pose3d(
+            0.0,
+            0.0,
+            1.075,
+            new Rotation3d(0.0, simPos.in(Radians), Degrees.of(180.0).in(Radians)));
 
-    SmartDashboard.putNumber("Bus Voltage", motorSim.getBusVoltage());
     SmartDashboard.putNumber("Applied Output", motorSim.getAppliedOutput());
-    SmartDashboard.putNumber("sparkPeriod", sparkPeriod.in(Seconds));
-    SmartDashboard.putNumber(
-        "ArmSim Input", motorSim.getAppliedOutput() * motorSim.getBusVoltage());
 
-    SmartDashboard.putNumber("motorSim Output", motorSim.getAppliedOutput());
-
+    SmartDashboard.putNumber("Comp1 Rotation", simPos.minus(Degrees.of(90)).in(Degrees));
     SmartDashboard.putNumber("simVel", simVel.in(RPM));
-
     SmartDashboard.putNumber("simPos", simPos.in(Degrees));
   }
 }
