@@ -24,7 +24,7 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   public Robot() {
-    Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
+    Logger.recordMetadata("Driver Sim Testing", "Driver Sim Testing"); // Set a metadata value
 
     if (isReal()) {
       Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
@@ -42,10 +42,10 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    m_robotContainer = new RobotContainer();
-
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may
     // be added.
+
+    m_robotContainer = new RobotContainer();
   }
 
   @Override
