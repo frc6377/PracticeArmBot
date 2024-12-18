@@ -39,6 +39,8 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(
             new WPILOGWriter(
                 LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+      } else {
+        Logger.addDataReceiver(new NT4Publisher());
       }
     }
 

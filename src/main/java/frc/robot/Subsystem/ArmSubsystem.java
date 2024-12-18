@@ -25,8 +25,6 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
@@ -46,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Robot;
+import org.littletonrobotics.junction.Logger;
 
 public class ArmSubsystem extends SubsystemBase {
   private final SparkMax motor;
@@ -64,10 +63,6 @@ public class ArmSubsystem extends SubsystemBase {
 
   private Pose3d compPose1 = new Pose3d(0.0, 0.0, 0.1, new Rotation3d());
   private Pose3d compPose2 = new Pose3d();
-  private StructPublisher<Pose3d> publisher1 =
-      NetworkTableInstance.getDefault().getStructTopic("compPose1", Pose3d.struct).publish();
-  private StructPublisher<Pose3d> publisher2 =
-      NetworkTableInstance.getDefault().getStructTopic("compPose2", Pose3d.struct).publish();
 
   /** Creates a new ArmSubsystem. */
   public ArmSubsystem(int id) {
@@ -163,8 +158,8 @@ public class ArmSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Arm Pose", getArmPose().in(Degrees));
-    publisher1.set(compPose1);
-    publisher2.set(compPose2);
+    Logger.recordOutput("Field Sim/Bot Sim/Comp Pose3d 1", compPose1);
+    Logger.recordOutput("Field Sim/Bot Sim/Comp Pose3d 2", compPose2);
   }
 
   @Override
