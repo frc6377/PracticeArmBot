@@ -10,6 +10,7 @@ import frc.robot.subsytems.Arm;
 
 public class RobotContainer {
   private Arm arm = new Arm();
+
   public RobotContainer() {
     configureBindings();
   }

@@ -1,44 +1,42 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsytems;
 
-import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import static edu.wpi.first.units.Units.Rotations;
 
+import com.revrobotics.spark.SparkAbsoluteEncoder;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-
 public class Arm extends SubsystemBase {
-  /** Creates a new Arm. */
-  private SparkMax motor;
-  private SparkAbsoluteEncoder encoder;
-  private SparkMaxConfig motorConfig;
-  private SparkClosedLoopController closedLoop;
 
-  public Arm() {
-    motor = new SparkMax(Constants.Arm.WRIST_MOTOR_ID, SparkLowLevel.MotorType.fromId(Constants.Arm.WRIST_MOTOR_ID));
-    encoder = motor.getAbsoluteEncoder();
-    closedLoop = motor.getClosedLoopController();
+  private final SparkMax motor;
+  private final SparkAbsoluteEncoder motorEncoder;
+
+  public Arm(int id) {
+    motor = new SparkMax(id, null);
+    motorEncoder = motor.getAbsoluteEncoder();
+    motor.configure(
+        Constants.Arm.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
+  public Command gotoAngle(Angle a) {
+    return startEnd(
+        () -> {
+          motor.getClosedLoopController().setReference(a.in(Rotations), ControlType.kPosition);
+        },
+        motor::stopMotor);
   }
 
-  void gotoAngle(double speed, int angle) {
-    closedLoop.setReference(speed, SparkBase.ControlType.kMAXMotionPositionControl, angle);
+  public Command stop(){
+    return run(motor::stopMotor);
   }
 
-  void stop() {
-    motor.stopMotor();
+  public Command telopPeriodic(){
+    
   }
-  
 }
