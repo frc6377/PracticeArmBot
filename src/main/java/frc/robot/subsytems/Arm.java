@@ -12,18 +12,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.leftBumper;
 import edu.wpi.first.wpilibj2.command.rightBumper;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 
 public class Arm extends SubsystemBase {
 
   private final SparkMax motor;
   private final SparkAbsoluteEncoder motorEncoder;
+  private final CommandXboxController xboxController;
 
   public Arm(int id) {
     motor = new SparkMax(id, null);
     motorEncoder = motor.getAbsoluteEncoder();
     motor.configure(
         Constants.Arm.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    xboxController = new CommandXboxController();
   }
 
   // Goes to angle
