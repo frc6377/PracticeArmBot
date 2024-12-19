@@ -16,13 +16,13 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Move arm to 45 degrees when A button is pressed
-    controller.a().onTrue(new SetArmPositionCommand(robotArm, 45.0));
+    controller.a().whileTrue(new SetArmPositionCommand(robotArm, 45.0));
 
     // Move arm to -45 degrees when B button is pressed
-    controller.b().onTrue(new SetArmPositionCommand(robotArm, -45.0));
+    controller.b().whileTrue(new SetArmPositionCommand(robotArm, -45.0));
 
     // Return to 0 degrees when X button is pressed
-    controller.x().onTrue(new SetArmPositionCommand(robotArm, 0.0));
+    controller.x().whileTrue(new SetArmPositionCommand(robotArm, 0.0));
   }
 
   public Command getAutonomousCommand() {
