@@ -57,7 +57,7 @@ public class RobotArm extends SubsystemBase {
     pidController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Initialize feedforward
-    feedforward = new ArmFeedforward(0.0, 0.5, 1.0);
+    feedforward = new ArmFeedforward(0.0, 0.18, 0.69);
 
     // Initialize visualization
     mechanism = new Mechanism2d(60, 60);
