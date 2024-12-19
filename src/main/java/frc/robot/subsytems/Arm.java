@@ -10,6 +10,8 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.leftBumper;
+import edu.wpi.first.wpilibj2.command.rightBumper;
 import frc.robot.Constants;
 
 public class Arm extends SubsystemBase {
@@ -24,6 +26,7 @@ public class Arm extends SubsystemBase {
         Constants.Arm.sparkCfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
+  // Goes to angle
   public Command gotoAngle(Angle a) {
     return startEnd(
         () -> {
@@ -32,11 +35,24 @@ public class Arm extends SubsystemBase {
         motor::stopMotor);
   }
 
+  // Stops motor
   public Command stop(){
     return run(motor::stopMotor);
   }
 
-  public Command telopPeriodic(){
-    
+  // Motor goes to max angle
+  public Trigger leftBumper(){
+      return startEnd(
+        () -> {
+          motor.gotoAngle(Degrees.of(Constants.Arm.WRIST_MAX_ANGLE))  // The Degrees.of here is redundant but I felt like it
+        }
+      )
+  }
+
+  // Motor goes to min angle
+  public Trigger rightBumper(){
+      return startEnd(
+        motor.gotoAngle(Degrees.of(Constants.Arm.WRIST_MIN_ANGLE))  // Ditto
+      )
   }
 }
