@@ -1,14 +1,19 @@
 // RobotArm.java
 package frc.robot.subsystem;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -32,11 +37,6 @@ public class RobotArm extends SubsystemBase {
   private final MechanismRoot2d root;
   private final MechanismLigament2d arm;
 
-  // Constants
-  private static final double ARM_MASS = 2.0; // kg
-  private static final double MIN_ANGLE = -90.0;
-  private static final double MAX_ANGLE = 90.0;
-
   public RobotArm() {
     // Initialize the arm simulation
     armSim =
@@ -49,7 +49,8 @@ public class RobotArm extends SubsystemBase {
             Arm.WRIST_MAX_ANGLE.in(Radians), // Max angle
             true, // Simulate gravity
             0,
-            Arm.WRIST_ENCODER_DISTANCE_PULSE);
+            Arm.WRIST_ENCODER_DISTANCE_PULSE,
+            1);
 
     // Initialize PID controller
     pidController = new PIDController(1.0, 0.0, 0.0);
@@ -73,17 +74,20 @@ public class RobotArm extends SubsystemBase {
   }
 
   public void setPosition(double targetAngleDegrees) {
-    double currentAngle = armSim.getAngleRads();
-    double targetAngle = Units.degreesToRadians(targetAngleDegrees);
+    Angle currentAngle = Angle.ofBaseUnits(armSim.getAngleRads(), Radians);
+    Angle targetAngle = Angle.ofBaseUnits(targetAngleDegrees, Degrees);
 
     // Calculate PID output
-    double pidOutput = pidController.calculate(currentAngle, targetAngle);
+    double pidOutput = pidController.calculate(currentAngle.in(Radians), targetAngle.in(Radians));
 
     // Calculate feedforward
-    double ffOutput = feedforward.calculate(targetAngle, 0);
+    Voltage ffOutput =
+        feedforward.calculate(
+            currentAngle,
+            AngularVelocity.ofBaseUnits(armSim.getVelocityRadPerSec(), RadiansPerSecond));
 
     // Apply voltage to the simulated arm
-    armSim.setInputVoltage(pidOutput + ffOutput);
+    armSim.setInputVoltage(pidOutput + ffOutput.magnitude() + 1);
   }
 
   @Override
