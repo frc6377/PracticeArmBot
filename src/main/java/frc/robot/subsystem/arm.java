@@ -26,12 +26,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.Arm;
 import frc.robot.Robot;
 import frc.robot.utilities.DebugEntry;
+import java.util.function.DoubleSupplier;
 
 public class arm extends SubsystemBase {
   private final SparkMax PivotMotor;
   private final SparkAbsoluteEncoder PivotEncoder;
   private final PIDController PivotPid;
-  private double TargetAngle;
+  private static double TargetAngle;
   private final DCMotor pivotGearbox = DCMotor.getNEO(1);
   private final SingleJointedArmSim armSim;
   private final SparkMaxSim PivotMotorSim;
@@ -77,7 +78,14 @@ public class arm extends SubsystemBase {
   public Command GoToAngle(Angle angle) {
     return runOnce(
         () -> {
-          double TargetAngle = angle.in(Radians);
+          TargetAngle = angle.in(Radians);
+        });
+  }
+
+  public Command changeAngle(DoubleSupplier axis) {
+    return run(
+        () -> {
+          GoToAngle(axis.getAsDouble() * Arm.speed);
         });
   }
 

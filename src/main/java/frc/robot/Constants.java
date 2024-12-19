@@ -8,6 +8,7 @@ public final class Constants {
 
   public static class Arm {
     // Wrist
+    public static final double speed = 1;
     public static final double WRIST_ENCODER_DISTANCE_PULSE = 2.0 * Math.PI / 4096;
     public static final int WRIST_MOTOR_ID = 12;
     public static final int WRIST_ENCODER_ID = 25;
